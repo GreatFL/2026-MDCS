@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Memorial Day Tribute Car Show Registration</title>
+    <!-- Load Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font family --><style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom gradient for the button */
+        .gradient-red-white-blue {
+            background-image: linear-gradient(to right, #EF4444 0%, #FFFFFF 50%, #3B82F6 100%); /* Red, White, Blue */
+            color: #1a202c; /* Dark text for contrast */
+        }
+        .gradient-red-white-blue:hover {
+            background-image: linear-gradient(to right, #DC2626 0%, #F8F8F8 50%, #2563EB 100%); /* Slightly darker on hover */
+        }
+        .gradient-red-white-blue.focus-visible:outline.focus-visible:outline-2.focus-visible:outline-offset-2.focus-visible:outline-red-500 {
+            box-shadow: 0 0 0 4px #e5e7eb, 0 0 0 6px #ef4444; /* Custom focus ring */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-start justify-center p-4">
+
+    <!-- Main Container --><div id="form-container" class="w-full max-w-2xl bg-white shadow-xl rounded-xl p-8 transition-all duration-300">
+        <h1 class="text-3xl font-extrabold text-gray-900 text-center mb-2">
+            2026 Memorial Day Tribute Car Show
+        </h1>
+        <p class="text-lg text-gray-600 text-center mb-8">
+            Register your vehicle(s) below.
+        </p>
+
+        <!-- Dynamic Form Content --><form id="car-show-form" class="space-y-6">
+
+            <!-- Personal Information --><fieldset class="border-b border-gray-200 pb-6 mb-6">
+                <legend class="text-xl font-semibold text-gray-800 mb-4">Your Information</legend>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- First Name --><div>
+                        <label for="firstName" class="block text-sm font-medium text-gray-700">First Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="firstName" name="firstName" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                    </div>
+                    <!-- Last Name --><div>
+                        <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="lastName" name="lastName" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                    </div>
+                </div>
+
+                <!-- Are you a Veteran? Checkbox --><div class="mt-6 flex items-center">
+                    <input id="isVeteran" name="isVeteran" type="checkbox"
+                           class="h-5 w-5 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                    <label for="isVeteran" class="ml-3 block text-base text-gray-900">
+                        Are you a Veteran?
+                    </label>
+                </div>
+            </fieldset>
+
+            <!-- Vehicle 1 (Initial Vehicle) --><div id="vehicle-block-0" class="vehicle-block border-2 border-red-200 p-6 rounded-xl bg-red-50 transition-all duration-300">
+                <h2 class="text-xl font-bold text-red-800 mb-4">Vehicle 1 (Required)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Year --><div>
+                        <label for="year-0" class="block text-sm font-medium text-gray-700">Year (4 digits) <span class="text-red-500">*</span></label>
+                        <input type="number" id="year-0" name="year-0" min="1900" max="2100" required pattern="\d{4}"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                    </div>
+                    <!-- Make --><div>
+                        <label for="make-0" class="block text-sm font-medium text-gray-700">Make <span class="text-red-500">*</span></label>
+                        <input type="text" id="make-0" name="make-0" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                    </div>
+                    <!-- Model --><div>
+                        <label for="model-0" class="block text-sm font-medium text-gray-700">Model <span class="text-red-500">*</span></label>
+                        <input type="text" id="model-0" name="model-0" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                    </div>
+                </div>
+
+                <!-- Is this vehicle a tribute to a Veteran? Checkbox --><div class="mt-4 flex items-center">
+                    <input id="isTribute-0" name="isTribute-0" type="checkbox"
+                           class="h-5 w-5 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                    <label for="isTribute-0" class="ml-3 block text-base text-gray-900">
+                        Is this vehicle a tribute to a Veteran?
+                    </label>
+                </div>
+            </div>
+
+            <!-- Additional Vehicle Area --><div id="additional-vehicles-area" class="space-y-6">
+                <!-- Dynamic vehicle blocks will be inserted here --></div>
+
+            <!-- Action Buttons --><div class="flex flex-col sm:flex-row justify-between pt-4 border-t border-gray-200 space-y-3 sm:space-y-0 sm:space-x-3">
+                <button type="button" id="add-vehicle-btn"
+                        class="px-6 py-3 border border-red-600 text-red-600 font-semibold rounded-lg shadow-md hover:bg-red-50 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 w-full sm:w-auto">
+                    + Add Additional Vehicle
+                </button>
+                <button type="button" id="remove-vehicle-btn" disabled
+                        class="px-6 py-3 bg-gray-300 text-gray-700 font-semibold rounded-lg shadow-md transition duration-150 ease-in-out cursor-not-allowed w-full sm:w-auto">
+                    &times; Cancel Last Vehicle
+                </button>
+            </div>
+
+            <!-- Submit Button - Gradient Red-White-Blue --><button type="submit" id="submit-btn"
+                    class="w-full mt-6 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg font-bold gradient-red-white-blue transition duration-200 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500">
+                Register Vehicles
+            </button>
+        </form>
+
+        <!-- Loading Indicator --><div id="loading-message" class="hidden text-center mt-6 p-4 bg-gray-100 rounded-lg">
+            <div class="flex items-center justify-center space-x-2">
+                <svg class="animate-spin h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-700 font-medium">Submitting registration... Please wait.</span>
+            </div>
+        </div>
+
+        <!-- Success Message --><div id="success-message" class="hidden text-center mt-6 p-10 bg-green-100 rounded-xl border border-green-300 transition-all duration-300">
+            <svg class="mx-auto h-12 w-12 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <h2 class="text-2xl font-bold text-green-800 mt-4">Registration Successful!</h2>
+            <p class="text-lg text-gray-700 mt-2">
+                Thank you for registering for the 2026 Memorial Day Tribute Car Show.
+            </p>
+            <p class="text-3xl font-extrabold text-red-600 mt-4">
+                Your registration number will be: <span id="reg-number"></span>
+            </p>
+            <p class="text-sm text-gray-500 mt-6">
+                Please save this number for event day check-in.
+            </p>
+        </div>
+
+        <!-- Error Message --><div id="error-message" class="hidden text-center mt-6 p-4 bg-red-100 rounded-lg border border-red-300">
+            <p class="text-red-700 font-medium">An error occurred while submitting your registration. Please try again or contact the event organizer.</p>
+        </div>
+    </div>
+
+    <script>
+        // *** IMPORTANT: This now points to the secure backend API endpoint for Vercel deployment ***
+        const APPS_SCRIPT_URL = '/api/register'; 
+
+        let vehicleCount = 1;
+        const additionalVehiclesArea = document.getElementById('additional-vehicles-area');
+        const addVehicleBtn = document.getElementById('add-vehicle-btn');
+        const removeVehicleBtn = document.getElementById('remove-vehicle-btn');
+        const form = document.getElementById('car-show-form');
+        const formContainer = document.getElementById('form-container');
+        const loadingMessage = document.getElementById('loading-message');
+        const successMessage = document.getElementById('success-message');
+        const errorMessage = document.getElementById('error-message');
+
+        /**
+         * Generates the HTML for an additional vehicle block.
+         * @param {number} index - The index of the vehicle (1, 2, 3, etc. for additional vehicles).
+         * @returns {string} The HTML string.
+         */
+        function createVehicleBlock(index) {
+            const blockId = `vehicle-block-${index}`;
+            const vehicleNumber = index + 1;
+            return `
+                <div id="${blockId}" class="vehicle-block border-2 border-red-100 p-6 rounded-xl bg-white shadow-sm transition-all duration-300">
+                    <h2 class="text-xl font-bold text-red-800 mb-4">Additional Vehicle ${vehicleNumber}</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Year --><div>
+                            <label for="year-${index}" class="block text-sm font-medium text-gray-700">Year (4 digits) <span class="text-red-500">*</span></label>
+                            <input type="number" id="year-${index}" name="year-${index}" min="1900" max="2100" required pattern="\\d{4}"
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                        </div>
+                        <!-- Make --><div>
+                            <label for="make-${index}" class="block text-sm font-medium text-gray-700">Make <span class="text-red-500">*</span></label>
+                            <input type="text" id="make-${index}" name="make-${index}" required
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                        </div>
+                        <!-- Model --><div>
+                            <label for="model-${index}" class="block text-sm font-medium text-gray-700">Model <span class="text-red-500">*</span></label>
+                            <input type="text" id="model-${index}" name="model-${index}" required
+                                   class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 p-3 border">
+                        </div>
+                    </div>
+
+                    <!-- Is this vehicle a tribute to a Veteran? Checkbox --><div class="mt-4 flex items-center">
+                        <input id="isTribute-${index}" name="isTribute-${index}" type="checkbox"
+                               class="h-5 w-5 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <label for="isTribute-${index}" class="ml-3 block text-base text-gray-900">
+                            Is this vehicle a tribute to a Veteran?
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+
+        /** Adds a new vehicle block. */
+        function addVehicle() {
+            const newBlockHtml = createVehicleBlock(vehicleCount);
+            additionalVehiclesArea.insertAdjacentHTML('beforeend', newBlockHtml);
+            vehicleCount++;
+            updateRemoveButtonState();
+        }
+
+        /** Removes the last added vehicle block. */
+        function removeVehicle() {
+            if (vehicleCount > 1) {
+                const lastBlock = document.getElementById(`vehicle-block-${vehicleCount - 1}`);
+                if (lastBlock) {
+                    lastBlock.remove();
+                    vehicleCount--;
+                    updateRemoveButtonState();
+                }
+            }
+        }
+
+        /** Updates the state (enabled/disabled) of the remove button. */
+        function updateRemoveButtonState() {
+            // Disable button if no additional vehicles exist (vehicleCount starts at 1)
+            if (vehicleCount > 1) {
+                removeVehicleBtn.disabled = false;
+                removeVehicleBtn.classList.remove('bg-gray-300', 'text-gray-700', 'cursor-not-allowed');
+                removeVehicleBtn.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+            } else {
+                removeVehicleBtn.disabled = true;
+                removeVehicleBtn.classList.add('bg-gray-300', 'text-gray-700', 'cursor-not-allowed');
+                removeVehicleBtn.classList.remove('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+            }
+        }
+
+        /**
+         * Collects and structures all form data into an array of rows, one per vehicle,
+         * duplicating registrant info for each row.
+         * @returns {Array<object>} The structured array of data rows to be sent.
+         */
+        function collectFormData() {
+            const rows = [];
+            
+            // Collect personal info (applies to all vehicles in this submission)
+            const registrantInfo = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                isVeteran: document.getElementById('isVeteran').checked,
+            };
+
+            // Loop through all vehicle blocks (starting with index 0)
+            for (let i = 0; i < vehicleCount; i++) {
+                const year = document.getElementById(`year-${i}`)?.value;
+                const make = document.getElementById(`make-${i}`)?.value;
+                const model = document.getElementById(`model-${i}`)?.value;
+                const isTribute = document.getElementById(`isTribute-${i}`)?.checked || false;
+
+                if (year && make && model) {
+                    rows.push({
+                        // A: First Name
+                        firstName: registrantInfo.firstName,
+                        // B: Last Name
+                        lastName: registrantInfo.lastName,
+                        // C: Year
+                        year: year,
+                        // D: Make
+                        make: make,
+                        // E: Model
+                        model: model,
+                        // F: Veteran (Registrant Status)
+                        isVeteran: registrantInfo.isVeteran,
+                        // G: Tribute (Vehicle Status)
+                        isTribute: isTribute
+                    });
+                }
+            }
+            
+            // Now returning an array of row objects, not a single object with a vehicles array
+            return rows;
+        }
+
+        /** Handles the form submission process. */
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            // Reset messages and show loading
+            errorMessage.classList.add('hidden');
+            loadingMessage.classList.remove('hidden');
+            form.classList.add('hidden');
+
+            const payload = collectFormData(); // This is now an array of rows
+            
+            // Basic validation to ensure at least one vehicle is registered
+            if (payload.length === 0) { // Check length of the array
+                loadingMessage.classList.add('hidden');
+                form.classList.remove('hidden');
+                errorMessage.querySelector('p').textContent = "Please ensure all required fields for at least Vehicle 1 are filled out.";
+                errorMessage.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Exponential backoff retry logic (max 3 attempts)
+                let response = null;
+                let attempt = 0;
+                const maxAttempts = 3;
+
+                while (attempt < maxAttempts) {
+                    try {
+                        // NOTE: APPS_SCRIPT_URL is now '/api/register', a relative path to the Vercel function
+                        response = await fetch(APPS_SCRIPT_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(payload),
+                        });
+
+                        if (response.ok) {
+                            break; // Success! Exit the retry loop.
+                        } else {
+                            throw new Error(`Server returned status ${response.status}`);
+                        }
+                    } catch (error) {
+                        attempt++;
+                        if (attempt >= maxAttempts) {
+                            throw error; // If all attempts fail, throw the original error.
+                        }
+                        const delay = Math.pow(2, attempt) * 1000;
+                        console.warn(`Attempt ${attempt} failed. Retrying in ${delay / 1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+
+                const result = await response.json();
+
+                // The Vercel API will now return the FIRST row number that was added.
+                if (result && result.registrationNumber) {
+                    document.getElementById('reg-number').textContent = result.registrationNumber;
+                    loadingMessage.classList.add('hidden');
+                    successMessage.classList.remove('hidden');
+                    formContainer.scrollIntoView({ behavior: 'smooth' }); // Scroll to the top of the success message
+                } else {
+                    throw new Error('Invalid response from server: Missing registration number or empty response.');
+                }
+            } catch (error) {
+                console.error('Submission failed:', error);
+                loadingMessage.classList.add('hidden');
+                errorMessage.querySelector('p').textContent = `An error occurred: ${error.message}. Please check the console for details.`;
+                errorMessage.classList.remove('hidden');
+                form.classList.remove('hidden'); // Show the form again on error
+            }
+        }
+
+        // Initialize event listeners
+        addVehicleBtn.addEventListener('click', addVehicle);
+        removeVehicleBtn.addEventListener('click', removeVehicle);
+        form.addEventListener('submit', handleSubmit);
+
+        // Initial state update
+        updateRemoveButtonState();
+
+    </script>
+</body>
+</html>
