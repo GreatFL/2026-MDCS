@@ -1,132 +1,76 @@
-// --- Using official 'googleapis' library to resolve NPM dependency error ---
+import { google } from 'googleapis';
 
-const { GoogleAuth } = require('google-auth-library');
-const { google } = require('googleapis'); // Now using the official Google API Client
-
-// Helper function to extract vehicle data
-function extractVehicleData(data) {
-    const vehicles = [];
-    let i = 1;
-    while (data[`vehicle_year_${i}`]) {
-        vehicles.push({
-            year: data[`vehicle_year_${i}`],
-            make: data[`vehicle_make_${i}`],
-            model: data[`vehicle_model_${i}`],
-            class: data[`vehicle_class_${i}`],
-            // Fees are $10 for show class, $0 for spectator class
-            fee: data[`vehicle_fee_${i}`] === '10' ? '10' : '0' 
-        });
-        i++;
-    }
-    return vehicles;
-}
-
-// Helper function to calculate total fees
-function calculateTotalFee(vehicles) {
-    // Total is $10 for entry (if there's at least one vehicle) plus the sum of all fees (which are $10 or $0)
-    // We assume the sum of individual vehicle fees is the total required payment.
-    return vehicles.reduce((sum, v) => sum + parseInt(v.fee, 10), 0) + (vehicles.length > 0 ? 10 : 0);
-}
-
-
-// Vercel serverless function entry point
-module.exports = async (req, res) => {
-    // 1. Only allow POST requests
+export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        res.setHeader('Allow', ['POST']);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
+        // Only allow POST requests
+        return res.status(405).send('Method Not Allowed');
     }
 
-    // 2. Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    // 1. Load Environment Variables
+    // The PRIVATE_KEY needs its escaped newlines (\n) converted back to actual newlines
+    const private_key = process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY.replace(/\\n/g, '\n') : null;
+    const client_email = process.env.CLIENT_EMAIL;
+    const sheet_id = process.env.SHEET_ID;
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+    // Basic validation
+    if (!private_key || !client_email || !sheet_id) {
+        console.error("Missing required environment variables.");
+        return res.status(500).json({ error: 'Server configuration error: Missing credentials.' });
     }
-    
-    // 3. Initialize Google Auth and Sheets Client
+
+    // 2. Extract Data from Request Body
+    const { name, email, phone, car_make, car_model, car_year } = req.body;
+
+    // Data validation (basic check to prevent empty submissions)
+    if (!name || !email || !car_make) {
+        return res.status(400).json({ error: 'Missing required form fields.' });
+    }
+
+    // The new row data we are preparing to insert (includes timestamp)
+    const values = [
+        [name, email, phone, car_make, car_model, car_year, new Date().toLocaleString()]
+    ];
+
     try {
-        const auth = new GoogleAuth({
-            credentials: {
-                client_email: process.env.CLIENT_EMAIL,
-                private_key: process.env.PRIVATE_KEY.replace(/\\n/g, '\n'), // Handle key formatting
-            },
+        // 3. Authorize Google Service Account (for writing)
+        const auth = new google.auth.JWT({
+            email: client_email,
+            key: private_key,
             scopes: ['https://www.googleapis.com/auth/spreadsheets'],
         });
-        
-        const sheets = google.sheets({ version: 'v4', auth });
-        
-        const formData = req.body;
-        const registrationDate = new Date().toISOString();
 
-        // Extract and process vehicles
-        const vehicles = extractVehicleData(formData);
-        
-        if (vehicles.length === 0) {
-             return res.status(400).json({ error: 'No vehicle data submitted.' });
-        }
+        // Acquire the authenticated client (needed before initializing sheets)
+        const authClient = await auth.authorize();
 
-        // Calculate total fee (Re-evaluating logic: $10/show car + $10 base entry fee)
-        const totalFee = calculateTotalFee(vehicles);
-        const feeStatus = formData.payment_status || 'Unpaid';
+        // 4. Initialize Google Sheets client with the authorized client
+        const sheets = google.sheets({ version: 'v4', auth: authClient });
 
-        // Prepare rows for sheet insertion
-        const baseRow = [
-            registrationDate,
-            formData.first_name,
-            formData.last_name,
-            formData.phone,
-            formData.email,
-            vehicles[0].year,
-            vehicles[0].make,
-            vehicles[0].model,
-            vehicles[0].class,
-            vehicles[0].fee,
-            totalFee, // Total Fee only on the first row
-            feeStatus,
-            formData.signature_name,
-        ];
-
-        const rowsToAdd = [baseRow];
-
-        // Add rows for additional vehicles (only vehicle data)
-        for (let i = 1; i < vehicles.length; i++) {
-            rowsToAdd.push([
-                '', '', '', '', '', // Empty fields for contact info
-                vehicles[i].year,
-                vehicles[i].make,
-                vehicles[i].model,
-                vehicles[i].class,
-                vehicles[i].fee,
-                '', // Total Fee
-                '', // Fee Status
-                '', // Signature
-            ]);
-        }
-
-        // 4. Append data to Google Sheet using googleapis
+        // 5. Append data to the sheet
         const response = await sheets.spreadsheets.values.append({
-            spreadsheetId: process.env.SHEET_ID,
-            range: 'Registrations!A1', // Sheet Name and starting cell
-            valueInputOption: 'USER_ENTERED',
+            spreadsheetId: sheet_id,
+            // Range where data will be appended. Using 'A1' means it will find the next empty row.
+            range: 'A:G', 
+            valueInputOption: 'USER_ENTERED', // Formats data as if typed by a user
             insertDataOption: 'INSERT_ROWS',
             resource: {
-                values: rowsToAdd,
-            }
+                values: values,
+            },
         });
 
-        // 5. Get the row number from the response
-        const updatedRange = response.data.updates.updatedRange;
-        const match = updatedRange.match(/(\d+):/);
-        const registrationRowNumber = match ? match[1] : 'N/A';
+        console.log(`Successfully appended ${response.data.updates.updatedCells} cells.`);
         
-        // 6. Respond with success
-        res.status(200).json({ registrationNumber: registrationRowNumber });
+        // 6. Return success response
+        return res.status(200).json({ message: 'Registration successful! Thank you for signing up.' });
 
     } catch (error) {
-        console.error('Google Sheets API Error (Google APIs):', error);
-        res.status(500).json({ error: 'Failed to write to Google Sheet.', details: error.message });
+        console.error('Google Sheets API Error:', error.response ? error.response.data : error.message);
+
+        // Check for specific permission errors
+        if (error.response && error.response.status === 403) {
+            return res.status(403).json({ error: 'Permission denied. Ensure the service account has Editor access to the sheet.' });
+        }
+        
+        // General 400 error catch-all
+        return res.status(400).json({ error: 'An unknown error occurred with the Google Sheets API. Check console logs for details.' });
     }
-};
+}
