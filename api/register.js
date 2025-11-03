@@ -1,26 +1,14 @@
 import { google } from 'googleapis';
 
-// Vercel only supports the 'key' property in the service account object.
-// We must build the credentials object manually.
-const key = {
-  client_email: process.env.CLIENT_EMAIL,
-  // CRITICAL FIX: The private key is stored in Vercel with literal \n characters.
-  // We must explicitly replace the literal '\n' string with actual newline characters
-  // before the Google API can parse it correctly.
-  private_key: process.env.PRIVATE_KEY ? process.env.PRIVATE_KEY.replace(/\\n/g, '\n') : '',
-};
+// --- Environment Variables Setup ---
+const clientEmail = process.env.CLIENT_EMAIL;
+const sheetId = process.env.SHEET_ID;
 
-const SHEET_ID = process.env.SHEET_ID;
-
-// Initialize the Google Sheets API client
-const sheets = google.sheets({
-    version: 'v4',
-    auth: new google.auth.JWT({
-        email: key.client_email,
-        key: key.private_key,
-        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    }),
-});
+// CRITICAL: Replace the literal '\n' string from Vercel environment variables 
+// with actual newline characters for the private key to be valid.
+const privateKey = process.env.PRIVATE_KEY 
+    ? process.env.PRIVATE_KEY.replace(/\\n/g, '\n') 
+    : '';
 
 export default async function handler(req, res) {
     // Only allow POST requests
@@ -29,26 +17,91 @@ export default async function handler(req, res) {
         return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
-    try {
-        const { firstName, lastName, year, make, isVeteran, vehicleTribute } = req.body;
+    // Check for critical missing configuration before proceeding
+    if (!clientEmail || !privateKey || !sheetId) {
+        console.error('CRITICAL ERROR: Missing one or more required environment variables (CLIENT_EMAIL, PRIVATE_KEY, or SHEET_ID).');
+        return res.status(500).json({ error: 'Server configuration error. Missing credentials.' });
+    }
 
-        // Simple validation
+    // --- Authentication Setup ---
+    const auth = new google.auth.JWT({
+        email: clientEmail,
+        key: privateKey,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    try {
+        await auth.authorize();
+    } catch (authError) {
+        console.error('Google Auth Error: Could not authorize JWT client.', authError.message);
+        return res.status(500).json({ error: 'Authentication failed. Check environment variables and service account keys.' });
+    }
+
+    const sheets = google.sheets({
+        version: 'v4',
+        auth: auth,
+    });
+    // --- END Authentication Setup ---
+
+
+    try {
+        // 1. Destructure top-level fields (Driver info)
+        // We use nullish coalescing (?? {}) to ensure req.body exists and is an object
+        const { 
+            firstName, 
+            lastName, 
+            isVeteran, 
+            vehicles // This is an array from the client form
+        } = req.body ?? {};
+
+        // 2. ULTIMATE ROBUST FIX: Safely access the vehicle details
+        // We ensure vehicles is an array and get the first item, defaulting to an empty object
+        const firstVehicle = (Array.isArray(vehicles) && vehicles.length > 0) 
+            ? vehicles[0] 
+            : {};
+        
+        // 3. Destructure vehicle details from the first vehicle, using empty string defaults
+        // This prevents the validation from failing if a required field is null/undefined
+        const {
+            year = '', // Default to empty string
+            make = '', // Default to empty string
+            model = '', // Default to empty string
+            isTribute = false // Default to false
+        } = firstVehicle;
+
+        // 4. Basic validation - now we check the variables that were safely extracted
         if (!firstName || !lastName || !year || !make) {
-            return res.status(400).json({ error: 'Missing required registration fields.' });
+            console.error('Validation Failed: Missing required fields in payload.', { 
+                firstName: firstName || 'MISSING', 
+                lastName: lastName || 'MISSING', 
+                year: year || 'MISSING', 
+                make: make || 'MISSING' 
+            });
+            // If the validation fails, this error is sent back to the client as the 400 response
+            return res.status(400).json({ error: 'Missing required registration fields (First Name, Last Name, Year, or Make). Please ensure all required fields are filled.' });
         }
 
-        const currentTimestamp = new Date().toLocaleString();
+        const currentTimestamp = new Date().toLocaleString('en-US', { 
+            timeZone: 'America/New_York',
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        });
         
-        // Data to be appended to the spreadsheet
+        // 5. Map values to 8 columns (A:H)
         const values = [
             [
-                firstName,
-                lastName,
-                year,
-                make,
-                currentTimestamp,
-                isVeteran ? 'Yes' : 'No', // Convert boolean to string for the sheet
-                vehicleTribute
+                firstName,                  // A: First Name
+                lastName,                   // B: Last Name
+                year,                       // C: Year
+                make,                       // D: Make
+                model,                      // E: Model
+                (isVeteran ? 'Yes' : 'No'), // F: Veteran?
+                (isTribute ? 'Yes' : 'No'), // G: Tribute?
+                currentTimestamp            // H: Timestamp
             ]
         ];
 
@@ -56,11 +109,15 @@ export default async function handler(req, res) {
             values,
         };
 
+        const sheetName = 'Registrations'; 
+        const range = `${sheetName}!A:H`;
+
         // Append the data to the spreadsheet
         const result = await sheets.spreadsheets.values.append({
-            spreadsheetId: SHEET_ID,
-            range: 'Sheet1!A:G', // Adjust the range to include columns A through G
+            spreadsheetId: sheetId,
+            range: range, 
             valueInputOption: 'USER_ENTERED',
+            insertDataOption: 'INSERT_ROWS', 
             resource,
         });
 
@@ -68,18 +125,17 @@ export default async function handler(req, res) {
         if (result.data.updates.updatedRows && result.data.updates.updatedRows > 0) {
             return res.status(200).json({ message: 'Registration successful!' });
         } else {
-            // This case should ideally not happen if the request went through
-            return res.status(500).json({ error: 'Failed to add registration data to sheet.' });
+            console.warn('Append operation returned 0 updated rows.');
+            return res.status(500).json({ error: 'Failed to confirm data write operation.' });
         }
 
     } catch (error) {
         // Log the detailed error from the Google API to Vercel logs
-        console.error('Google Sheets API Error:', error.message || error);
+        console.error('Google Sheets API Error:', error.response?.data?.error?.message || error.message || error);
 
-        // Return a generic error to the client
         return res.status(500).json({ 
             error: 'Server Error: Failed to process registration.', 
-            details: error.message || 'Check server logs for details' 
+            details: 'A critical error occurred while communicating with the spreadsheet API. Check server logs.' 
         });
     }
 }

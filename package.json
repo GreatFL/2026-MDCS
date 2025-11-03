@@ -1,18 +1,19 @@
 {
-  "name": "car-show-2026",
+  "name": "my-api",
   "version": "1.0.0",
-  "description": "Registration form for the 2026 Memorial Day Tribute Car Show, integrated with Google Sheets.",
-  "main": "api/register.js",
   "scripts": {
-    "start": "node api/register.js"
-  },
-  "keywords": [
-    "vercel",
-    "google-sheets",
-    "registration"
-  ],
-  "dependencies": {
-    "google-auth-library": "^9.10.0",
-    "googleapis": "^129.0.0"
+    "start": "node index.js"
+  }
+}
+
+You would make it look like this:
+
+```json
+{
+  "name": "my-api",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
   }
 }
