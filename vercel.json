@@ -1,0 +1,8 @@
+{
+"rewrites": [
+{
+"source": "/",
+"destination": "/registration_form_gradient.html"
+}
+]
+}
